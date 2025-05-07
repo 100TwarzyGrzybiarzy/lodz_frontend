@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAlert - System śledzenia wycofanych leków</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div id="login-screen" class="active">
+        <header>
+            <div class="logo-container">
+                <h1>MedAlert</h1>
+                <span>Panel Administracyjny</span>
+            </div>
+            <div class="user-info">
+                <span class="user-status"></span>
+            </div>
+        </header>
+
+        <div class="login-form-container">
+            <div class="login-form">
+                <h2>Logowanie do panelu</h2>
+
+                <div class="form-group">
+                    <label for="username">Nazwa użytkownika:</label>
+                    <input type="text" id="username" placeholder="Wprowadź nazwę użytkownika">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Hasło:</label>
+                    <input type="password" id="password" placeholder="Wprowadź hasło">
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Rola:</label>
+                    <select id="role">
+                        <option value="" selected disabled>Wybierz rolę...</option>
+                        <option value="wytwórnia">Wytwórnia farmaceutyczna</option>
+                        <option value="hurtownia">Hurtownia farmaceutyczna</option>
+                        <option value="apteka">Apteka</option>
+                        <option value="gif">GIF Inspektor</option> </select>
+                </div>
+
+                <button id="login-btn" class="btn-primary">Zaloguj się</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-panel" class="hidden">
+        <header>
+            <div class="logo-container">
+                <h1>MedAlert</h1>
+                <span>Panel Administracyjny</span>
+            </div>
+            <div class="user-info">
+                <span id="logged-user"></span>
+                <span id="user-role" class="role-badge"></span>
+                <button id="logout-btn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Wyloguj</button>
+            </div>
+        </header>
+
+        <nav class="main-nav">
+            <div class="nav-item active" data-tab="wycofane-leki">Wycofane leki</div>
+            <div class="nav-item" data-tab="powiadomienia">Powiadomienia</div>
+            <div class="nav-item" data-tab="moj-inwentarz">Mój inwentarz</div>
+            <div class="nav-item" data-tab="raporty">Raporty</div>
+        </nav>
+
+        <section id="wycofane-leki" class="panel-section active">
+            <h2>Wycofane leki</h2>
+
+            <div class="search-container">
+                <input type="text" id="search-leki" placeholder="Szukaj leku...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+
+                <button id="add-withdrawal-btn" class="btn-primary hidden-role" data-visible-for="wytwórnia">
+                    <i class="fas fa-plus"></i> Dodaj wycofanie
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table id="medicines-table">
+                    <thead>
+                        <tr>
+                            <th>ID produktu</th>
+                            <th>Nazwa leku</th>
+                            <th>Numer serii</th>
+                            <th>Data wycofania</th>
+                            <th>Przyczyna wycofania</th>
+                            <th>Status</th>
+                            <th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="powiadomienia" class="panel-section">
+            <h2>Powiadomienia</h2>
+            <div class="notifications-container">
+                </div>
+        </section>
+
+        <section id="moj-inwentarz" class="panel-section">
+            <h2>Mój inwentarz</h2>
+            <div class="inventory-container">
+                </div>
+        </section>
+
+        <section id="raporty" class="panel-section">
+            <h2>Raporty</h2>
+            <button id="add-report-definition-btn" class="btn-primary hidden-role" data-visible-for="gif">
+                <i class="fas fa-plus"></i> Dodaj nowy raport
+            </button>
+            <div class="reports-container">
+                </div>
+        </section>
+    </div>
+
+    <div id="add-withdrawal-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Dodaj nowe wycofanie leku</h2>
+
+            <div class="form-group">
+                <label for="product-name">Nazwa leku:</label>
+                <input type="text" id="product-name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="batch-number">Numer serii:</label>
+                <input type="text" id="batch-number" required>
+            </div>
+
+            <div class="form-group">
+                <label for="withdrawal-reason">Przyczyna wycofania:</label>
+                <textarea id="withdrawal-reason" required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button id="submit-withdrawal" class="btn-primary">Dodaj wycofanie</button>
+                <button id="cancel-withdrawal" class="btn-secondary">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="medicine-details-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Szczegóły wycofanego leku</h2>
+            <div id="medicine-details-content">
+                </div>
+        </div>
+    </div>
+
+    <div id="add-report-definition-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-report-def-modal close">&times;</span>
+            <h2>Dodaj nowy raport</h2>
+
+            <div class="form-group">
+                <label for="report-definition-name">Nazwa raportu:</label>
+                <input type="text" id="report-definition-name" placeholder="Wprowadź nazwę raportu" required>
+            </div>
+
+            <div class="form-group">
+                <label for="report-definition-description">Opis:</label>
+                <textarea id="report-definition-description" placeholder="Wprowadź krótki opis raportu"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button id="submit-report-definition" class="btn-primary">Dodaj</button>
+                <button id="cancel-report-definition" class="btn-secondary">Anuluj</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

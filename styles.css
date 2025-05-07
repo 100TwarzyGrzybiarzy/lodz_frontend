@@ -1,0 +1,471 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.active {
+    display: block;
+}
+
+/* Nagłówek */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+    display: flex;
+    align-items: baseline;
+}
+
+.logo-container h1 {
+    color: #1e3a5f;
+    margin-right: 0.5rem;
+    font-weight: 600;
+}
+
+.logo-container span {
+    color: #6c7293;
+    font-size: 1.1rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-status {
+    font-size: 0.9rem;
+    color: #6c7293;
+}
+
+.role-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    background-color: #1e3a5f;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Formularz logowania */
+.login-form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 70px);
+}
+
+.login-form {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    width: 400px;
+}
+
+.login-form h2 {
+    color: #1e3a5f;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #1e3a5f;
+    outline: none;
+}
+
+/* Przyciski */
+.btn-primary {
+    background-color: #1e3a5f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #152b47;
+}
+
+.btn-secondary {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #d0d0d0;
+}
+
+.btn-logout {
+    background-color: transparent;
+    color: #e74c3c;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.btn-logout:hover {
+    text-decoration: underline;
+}
+
+/* Nawigacja główna */
+.main-nav {
+    display: flex;
+    background-color: #1e3a5f;
+    padding: 0 2rem;
+}
+
+.nav-item {
+    color: white;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-weight: 500;
+}
+
+.nav-item:hover {
+    background-color: #152b47;
+}
+
+.nav-item.active {
+    background-color: #152b47;
+    border-bottom: 3px solid #4caf50;
+}
+
+/* Sekcje panelu */
+.panel-section {
+    padding: 2rem;
+    display: none;
+}
+
+.panel-section.active {
+    display: block;
+}
+
+.panel-section h2 {
+    color: #1e3a5f;
+    margin-bottom: 1.5rem;
+}
+
+/* Wyszukiwarka */
+.search-container {
+    display: flex;
+    margin-bottom: 1.5rem;
+    gap: 0.5rem;
+}
+
+.search-container input {
+    flex: 1;
+    padding: 0.7rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.search-btn {
+    background-color: #1e3a5f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+}
+
+/* Tabela */
+.table-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #1e3a5f;
+    color: white;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tbody tr:hover {
+    background-color: #f5f7fa;
+}
+
+.status-badge {
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.status-active {
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+
+.status-withdrawn {
+    background-color: #ffebee;
+    color: #e53935;
+}
+
+.action-icons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-icons button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.view-btn {
+    color: #1e88e5;
+}
+
+.report-btn {
+    color: #43a047;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 8px;
+    padding: 2rem;
+    width: 500px;
+    max-width: 90%;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+.form-actions button {
+    flex: 1;
+    margin: 0 0.5rem;
+}
+
+/* Powiadomienia */
+.notifications-container,
+.inventory-container,
+.reports-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    min-height: 300px;
+}
+
+.notification-card {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.notification-icon {
+    font-size: 1.5rem;
+    color: #1e3a5f;
+}
+
+.notification-content h4 {
+    margin-bottom: 0.5rem;
+}
+
+.notification-time {
+    font-size: 0.8rem;
+    color: #999;
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    .main-nav {
+        flex-direction: column;
+    }
+
+    .search-container {
+        flex-direction: column;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-actions button {
+        margin: 0;
+    }
+}
+.panel-section.active { /* Upewnij się, że .active nadpisuje .hidden, jeśli oba są obecne */
+    display: block !important;
+}
+
+#add-report-definition-btn {
+    margin-bottom: 1rem; /* Odstęp od listy raportów */
+    width: auto; /* Aby przycisk nie był na całą szerokość, jeśli nie jest to pożądane */
+    padding: 0.7rem 1rem; /* Dopasowanie do innych przycisków akcji */
+}
+#add-report-definition-btn i {
+    margin-right: 0.5rem;
+}
+
+
+.reports-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    min-height: 200px; /* Zmniejszone, jeśli nie ma wielu raportów */
+}
+
+.reports-list {
+    list-style: none;
+    padding: 0;
+}
+
+.reports-list li {
+    background-color: #f9f9f9; /* Jaśniejsze tło dla elementu listy */
+    border: 1px solid #eee;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    display: flex; /* Umożliwia wyrównanie linku i przycisku usuwania */
+    justify-content: space-between; /* Rozsuwa elementy na boki */
+    align-items: center; /* Wyśrodkowuje elementy w pionie */
+}
+
+.reports-list li .report-link {
+    text-decoration: none;
+    color: #1e3a5f; /* Kolor linku pasujący do motywu */
+    display: block;
+    flex-grow: 1; /* Link zajmuje dostępną przestrzeń */
+}
+
+.reports-list li .report-link:hover {
+    text-decoration: underline;
+}
+
+.reports-list li .report-link strong {
+    font-size: 1.05em;
+}
+
+.reports-list li .report-link small {
+    color: #555;
+    font-size: 0.9em;
+    display: block;
+    margin-top: 4px;
+}
+
+.btn-delete-report-def {
+    margin-left: 10px;
+    background: transparent;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 5px;
+}
+
+.btn-delete-report-def:hover {
+    color: #c0392b;
+}
+
+.reports-container .empty-message {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
