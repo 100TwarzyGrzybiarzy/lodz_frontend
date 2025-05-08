@@ -71,8 +71,13 @@ let currentRole = null;
 
 // Funkcje pomocnicze
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('pl-PL', options);
+    if (!dateString) return 'Brak danych';
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+    try {
+        return new Date(dateString).toLocaleDateString('pl-PL', options);
+    } catch (e) {
+        return dateString; // Zwróć oryginalny string jeśli data jest nieprawidłowa
+    }
 }
 
 // Tłumaczenia ról dla UI
@@ -80,13 +85,81 @@ const roleTranslations = {
     'wytwórnia': 'Wytwórnia',
     'hurtownia': 'Hurtownia',
     'apteka': 'Apteka',
-    'gif': 'GIF Inspektor' // NOWE TŁUMACZENIE
+    'gif': 'GIF Inspektor'
 };
 
+// Funkcja do pobierania i przetwarzania danych z API
+async function fetchDataAndInitialize() {
+    try {
+        const response = await fetch('http://localhost:8000/drugs');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const apiJson = await response.json();
+        processGifData(apiJson); // Przetwarzanie danych i zapisanie do processedMedicines
+        loadMedicinesTable(); // Załadowanie tabeli z przetworzonymi danymi
+        // Można tu również odświeżyć inne zależne komponenty, np. powiadomienia
+    } catch (error) {
+        console.error("Nie udało się pobrać lub przetworzyć danych o lekach:", error);
+        alert("Wystąpił błąd podczas ładowania danych o lekach. Sprawdź konsolę, aby uzyskać więcej informacji.");
+        // Opcjonalnie: załaduj tabelę z pustymi danymi lub komunikatem o błędzie
+        processedMedicines = [];
+        loadMedicinesTable();
+    }
+}
+
+function processGifData(apiJson) {
+    if (!apiJson || !apiJson.Decyzje || !Array.isArray(apiJson.Decyzje.Decyzja)) {
+        console.error("Otrzymano nieprawidłowy format danych z API.");
+        processedMedicines = [];
+        return;
+    }
+
+    const decyzje = apiJson.Decyzje.Decyzja;
+    processedMedicines = decyzje
+        .filter(decyzja => {
+            // Filtrujemy decyzje, które nie są typowym wycofaniem/zakazem/wstrzymaniem
+            // np. ponowne dopuszczenie do obrotu lub wstrzymanie reklam
+            return ["WYCOFANIE_Z_OBROTU", "ZAKAZ_WPROWADZENIA", "WSTRZYMANIE_W_OBROCIE"].includes(decyzja.RodzajDecyzji);
+        })
+        .map(decyzja => {
+            let status = '';
+            let statusText = decyzja.RodzajDecyzji.replace(/_/g, ' ').toLowerCase();
+            statusText = statusText.charAt(0).toUpperCase() + statusText.slice(1); // Kapitalizacja
+
+            if (decyzja.RodzajDecyzji === "WYCOFANIE_Z_OBROTU" || decyzja.RodzajDecyzji === "ZAKAZ_WPROWADZENIA") {
+                status = 'withdrawn';
+            } else if (decyzja.RodzajDecyzji === "WSTRZYMANIE_W_OBROCIE") {
+                status = 'active'; // 'active' dla CSS, tekst będzie "Wstrzymanie w obrocie"
+            }
+
+            let batchNumbers = "Nie dotyczy";
+            if (decyzja.Serie && decyzja.Serie.Seria) {
+                const serieArray = Array.isArray(decyzja.Serie.Seria) ? decyzja.Serie.Seria : [decyzja.Serie.Seria];
+                batchNumbers = serieArray.map(s => s.NumerSerii).join(', ') || "Nie dotyczy";
+            }
+
+            const idParts = decyzja.LinkDoPobraniaDecyzji ? decyzja.LinkDoPobraniaDecyzji.split('/') : [];
+            const decisionId = idParts.length > 0 ? idParts[idParts.length -1] : decyzja.NumerDecyzji || `DEC_${Date.now()}_${Math.random()}`;
+
+            return {
+                id: decisionId,
+                name: decyzja.NazwaProduktuLeczniczego || "Brak nazwy",
+                batchNumber: batchNumbers,
+                withdrawalDate: decyzja.DataDecyzji,
+                reason: decyzja.RodzajDecyzji.replace(/_/g, ' '), // Bardziej czytelna przyczyna
+                status: status,
+                statusText: statusText,
+                apiData: decyzja // Przechowujemy oryginalne dane
+            };
+        });
+}
+
+
 // Obsługa logowania
-document.getElementById('login-btn').addEventListener('click', function() {
+document.getElementById('login-btn').addEventListener('click', async function() {
     const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value; // W rzeczywistości hasło byłoby weryfikowane
+    const password = document.getElementById('password').value;
     const role = document.getElementById('role').value;
 
     if (!username || !password || !role) {
@@ -112,16 +185,18 @@ document.getElementById('login-btn').addEventListener('click', function() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('main-panel').classList.remove('hidden');
 
-    loadMedicinesTable();
+    await fetchDataAndInitialize(); // Pobierz i przetwórz dane po zalogowaniu
+
     loadNotifications();
     loadInventory();
-    loadReports(); // Załaduj raporty po zalogowaniu
+    loadReports();
 });
 
 // Obsługa wylogowania
 document.getElementById('logout-btn').addEventListener('click', function() {
     currentUser = null;
     currentRole = null;
+    processedMedicines = []; // Wyczyść dane po wylogowaniu
 
     document.getElementById('username').value = '';
     document.getElementById('password').value = '';
@@ -130,6 +205,10 @@ document.getElementById('logout-btn').addEventListener('click', function() {
     document.getElementById('main-panel').classList.add('hidden');
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('login-screen').classList.add('active');
+
+    // Wyczyść tabelę leków
+    const tableBody = document.querySelector('#medicines-table tbody');
+    if (tableBody) tableBody.innerHTML = '';
 });
 
 
@@ -142,16 +221,17 @@ document.querySelectorAll('.nav-item').forEach(item => {
         const targetSection = this.dataset.tab;
         document.querySelectorAll('.panel-section').forEach(section => {
             section.classList.remove('active');
-            section.classList.add('hidden'); // Upewnij się, że wszystkie są ukryte
+            section.classList.add('hidden');
         });
         const activeSection = document.getElementById(targetSection);
         activeSection.classList.add('active');
         activeSection.classList.remove('hidden');
 
-
-        // Specjalne ładowanie dla raportów, gdy zakładka jest aktywowana
         if (targetSection === 'raporty') {
             loadReports();
+        }
+         if (targetSection === 'wycofane-leki' && processedMedicines.length > 0) {
+            loadMedicinesTable(); // Przeładuj tabelę, jeśli dane są dostępne
         }
     });
 });
@@ -159,10 +239,25 @@ document.querySelectorAll('.nav-item').forEach(item => {
 // Ładowanie danych do tabeli leków
 function loadMedicinesTable() {
     const tableBody = document.querySelector('#medicines-table tbody');
+    if (!tableBody) {
+        console.error("Nie znaleziono tbody tabeli leków!");
+        return;
+    }
     tableBody.innerHTML = '';
 
-    mockMedicines.forEach(medicine => {
+    if (processedMedicines.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Brak danych o wycofanych lekach lub dane nie zostały jeszcze załadowane.</td></tr>';
+        return;
+    }
+
+    processedMedicines.forEach(medicine => {
         const row = document.createElement('tr');
+        // Używamy medicine.statusText dla wyświetlanego tekstu statusu
+        // Używamy medicine.status ('active'/'withdrawn') dla klasy CSS
+        const statusClass = medicine.status === 'active' ? 'status-active' : (medicine.status === 'withdrawn' ? 'status-withdrawn' : 'status-unknown');
+        const displayedStatusText = medicine.statusText || (medicine.status === 'active' ? 'Aktywny' : (medicine.status === 'withdrawn' ? 'Wycofany' : 'Nieznany'));
+
+
         row.innerHTML = `
             <td>${medicine.id}</td>
             <td>${medicine.name}</td>
@@ -170,8 +265,8 @@ function loadMedicinesTable() {
             <td>${formatDate(medicine.withdrawalDate)}</td>
             <td>${medicine.reason}</td>
             <td>
-                <span class="status-badge ${medicine.status === 'active' ? 'status-active' : 'status-withdrawn'}">
-                    ${medicine.status === 'active' ? 'Aktywny' : 'Wycofany'}
+                <span class="status-badge ${statusClass}">
+                    ${displayedStatusText}
                 </span>
             </td>
             <td class="action-icons">
@@ -197,28 +292,68 @@ function loadMedicinesTable() {
 
 // Wyświetlanie szczegółów leku
 function showMedicineDetails(medicineId) {
-    const medicine = mockMedicines.find(m => m.id === medicineId);
-    if (!medicine) return;
+    const medicine = processedMedicines.find(m => String(m.id) === String(medicineId));
+    if (!medicine || !medicine.apiData) {
+        console.error("Nie znaleziono leku lub brak danych API dla ID:", medicineId);
+        document.getElementById('medicine-details-content').innerHTML = '<p>Nie znaleziono szczegółów dla tego leku.</p>';
+        document.getElementById('medicine-details-modal').classList.remove('hidden');
+        return;
+    }
+
+    const details = medicine.apiData;
+    const statusClass = medicine.status === 'active' ? 'status-active' : (medicine.status === 'withdrawn' ? 'status-withdrawn' : 'status-unknown');
+    const displayedStatusText = medicine.statusText || (medicine.status === 'active' ? 'Aktywny' : (medicine.status === 'withdrawn' ? 'Wycofany' : 'Nieznany'));
+
+    let serieInfo = "Brak danych o seriach";
+    if (details.Serie && details.Serie.Seria) {
+        const serieArray = Array.isArray(details.Serie.Seria) ? details.Serie.Seria : [details.Serie.Seria];
+        serieInfo = '<ul>';
+        serieArray.forEach(s => {
+            serieInfo += `<li>Numer: ${s.NumerSerii || 'Brak'}, Data ważności: ${formatDate(s.DataWaznosci) || 'Brak'}</li>`;
+        });
+        serieInfo += '</ul>';
+    }
+
+    let gtinInfo = "Brak danych GTIN";
+    if (details.ListaGTIN && details.ListaGTIN.GTIN) {
+        const gtinArray = Array.isArray(details.ListaGTIN.GTIN) ? details.ListaGTIN.GTIN : [details.ListaGTIN.GTIN];
+        gtinInfo = '<ul>';
+        gtinArray.forEach(g => {
+            gtinInfo += `<li>GTIN: ${g.GTIN || 'Brak'}, Wielkość opakowania: ${g.WielkoscOpakowania || 'Brak'}</li>`;
+        });
+        gtinInfo += '</ul>';
+    }
+
 
     const detailsContent = document.getElementById('medicine-details-content');
     detailsContent.innerHTML = `
         <div class="medicine-details">
-            <p><strong>ID produktu:</strong> ${medicine.id}</p>
-            <p><strong>Nazwa leku:</strong> ${medicine.name}</p>
-            <p><strong>Numer serii:</strong> ${medicine.batchNumber}</p>
-            <p><strong>Data wycofania:</strong> ${formatDate(medicine.withdrawalDate)}</p>
-            <p><strong>Przyczyna wycofania:</strong> ${medicine.reason}</p>
-            <p><strong>Status:</strong> 
-                <span class="status-badge ${medicine.status === 'active' ? 'status-active' : 'status-withdrawn'}">
-                    ${medicine.status === 'active' ? 'Aktywny' : 'Wycofany'}
+            <p><strong>ID Decyzji (Link):</strong> <a href="${details.LinkDoPobraniaDecyzji || '#'}" target="_blank">${medicine.id}</a></p>
+            <p><strong>Nazwa Produktu Leczniczego:</strong> ${details.NazwaProduktuLeczniczego || 'Brak danych'}</p>
+            <p><strong>Moc:</strong> ${details.Moc || 'Brak danych'}</p>
+            <p><strong>Postać:</strong> ${details.Postac || 'Brak danych'}</p>
+            <p><strong>Podmiot Odpowiedzialny:</strong> ${details.NazwaPodmiotuOdpowiedzialnego || 'Brak danych'}</p>
+            <hr>
+            <p><strong>Data Decyzji:</strong> ${formatDate(details.DataDecyzji)}</p>
+            <p><strong>Rodzaj Decyzji:</strong> ${details.RodzajDecyzji ? details.RodzajDecyzji.replace(/_/g, ' ') : 'Brak danych'}</p>
+            <p><strong>Numer Decyzji:</strong> ${details.NumerDecyzji || 'Brak danych'}</p>
+            <p><strong>Numer Sprawy:</strong> ${details.NumerSprawy || 'Brak danych'}</p>
+            <hr>
+            <p><strong>Status w systemie:</strong>
+                <span class="status-badge ${statusClass}">
+                    ${displayedStatusText}
                 </span>
             </p>
+            <h4>Serie Produktu:</h4>
+            ${serieInfo}
+            <h4>Lista GTIN:</h4>
+            ${gtinInfo}
             <div class="distribution-info">
-                <h4>Informacje o dystrybucji:</h4>
+                <h4>Informacje o dystrybucji (przykładowe):</h4>
                 <ul>
-                    <li>Wytwórnia: 5000 szt.</li>
-                    <li>Hurtownie: 3000 szt.</li>
-                    <li>Apteki: 2000 szt.</li>
+                    <li>Wytwórnia: (dane przykładowe)</li>
+                    <li>Hurtownie: (dane przykładowe)</li>
+                    <li>Apteki: (dane przykładowe)</li>
                 </ul>
             </div>
         </div>
@@ -229,8 +364,8 @@ function showMedicineDetails(medicineId) {
 // Ładowanie powiadomień
 function loadNotifications() {
     const container = document.querySelector('.notifications-container');
-    container.innerHTML = '';
-    if (mockNotifications.length === 0) {
+    container.innerHTML = ''; // Wyczyść istniejące
+    if (mockNotifications.length === 0) { // Używamy mockNotifications, można to zmienić na dynamiczne
         container.innerHTML = '<p class="empty-message">Brak nowych powiadomień</p>';
         return;
     }
@@ -252,12 +387,12 @@ function loadNotifications() {
 // Ładowanie danych inwentarza
 function loadInventory() {
     const container = document.querySelector('.inventory-container');
-    container.innerHTML = '';
+    container.innerHTML = ''; // Wyczyść istniejące
     if (!currentRole || !mockInventory[currentRole] || mockInventory[currentRole].length === 0) {
         container.innerHTML = '<p class="empty-message">Brak danych inwentarza dla tej roli.</p>';
         return;
     }
-    const inventory = mockInventory[currentRole];
+    const inventory = mockInventory[currentRole]; // Używamy mockInventory
     const table = document.createElement('table');
     table.innerHTML = `
         <thead>
@@ -284,7 +419,7 @@ function loadInventory() {
     container.appendChild(table);
 }
 
-// ZMODYFIKOWANA FUNKCJA: Ładowanie raportów
+// Ładowanie raportów
 function loadReports() {
     const container = document.querySelector('.reports-container');
     container.innerHTML = ''; // Wyczyść poprzednią zawartość
@@ -324,7 +459,7 @@ function loadReports() {
                 const reportDefId = this.dataset.id;
                 if (confirm('Czy na pewno chcesz usunąć tę definicję raportu?')) {
                     mockReportDefinitions = mockReportDefinitions.filter(def => def.id !== reportDefId);
-                    loadReports(); // Odśwież listę raportów
+                    loadReports();
                     alert('Definicja raportu została usunięta.');
                 }
             });
@@ -341,37 +476,57 @@ document.getElementById('add-withdrawal-btn')?.addEventListener('click', functio
 document.getElementById('submit-withdrawal')?.addEventListener('click', function() {
     const productName = document.getElementById('product-name').value;
     const batchNumber = document.getElementById('batch-number').value;
-    const reason = document.getElementById('withdrawal-reason').value;
+    const reasonInput = document.getElementById('withdrawal-reason').value; // To będzie opisowa przyczyna od użytkownika
 
-    if (!productName || !batchNumber || !reason) {
+    if (!productName || !batchNumber || !reasonInput) {
         alert('Proszę wypełnić wszystkie pola!');
         return;
     }
+    // Przy dodawaniu ręcznym, `RodzajDecyzji` będzie np. "WYCOFANIE INICJOWANE PRZEZ UŻYTKOWNIKA"
+    // lub można dodać pole wyboru rodzaju decyzji. Dla uproszczenia:
+    const rodzajDecyzjiManual = "WYCOFANIE MANUALNE";
 
-    const newMedicine = {
-        id: `MED_${Date.now().toString().substring(6)}`,
+    const newMedicineApiData = { // Tworzymy obiekt podobny do API dla spójności
+        NazwaProduktuLeczniczego: productName,
+        Serie: { Seria: [{ NumerSerii: batchNumber, DataWaznosci: null }] }, // Uproszczone
+        DataDecyzji: new Date().toISOString().split('T')[0],
+        RodzajDecyzji: rodzajDecyzjiManual,
+        Moc: "N/A",
+        Postac: "N/A",
+        NazwaPodmiotuOdpowiedzialnego: "Wprowadzone przez: " + currentUser,
+        LinkDoPobraniaDecyzji: "#local_" + Date.now(),
+        NumerDecyzji: "LOKALNE/" + Date.now().toString().substring(8),
+        NumerSprawy: "LOKALNE"
+    };
+
+    const newProcessedMedicine = {
+        id: newMedicineApiData.LinkDoPobraniaDecyzji.split('_')[1],
         name: productName,
         batchNumber: batchNumber,
-        withdrawalDate: new Date().toISOString().split('T')[0],
-        reason: reason,
-        status: 'active'
+        withdrawalDate: newMedicineApiData.DataDecyzji,
+        reason: rodzajDecyzjiManual + " (" + reasonInput + ")", // Łączymy rodzaj z opisem użytkownika
+        status: 'withdrawn', // Domyślnie wycofane
+        statusText: 'Wycofanie manualne',
+        apiData: newMedicineApiData
     };
-    mockMedicines.unshift(newMedicine);
+
+    processedMedicines.unshift(newProcessedMedicine);
     loadMedicinesTable();
 
+    // Dodaj powiadomienie - można rozbudować
     mockNotifications.unshift({
         id: mockNotifications.length + 1,
-        title: `Nowe wycofanie: ${productName}`,
+        title: `Nowe wycofanie (manualne): ${productName}`,
         time: new Date().toLocaleString('pl-PL'),
-        message: `Seria ${batchNumber} została wycofana z powodu: ${reason}.`
+        message: `Seria ${batchNumber} została wycofana. Przyczyna: ${reasonInput}.`
     });
-    loadNotifications();
+    loadNotifications(); // Odśwież powiadomienia
 
     document.getElementById('add-withdrawal-modal').classList.add('hidden');
     document.getElementById('product-name').value = '';
     document.getElementById('batch-number').value = '';
     document.getElementById('withdrawal-reason').value = '';
-    alert('Wycofanie zostało dodane!');
+    alert('Wycofanie zostało dodane lokalnie!');
 });
 
 document.getElementById('cancel-withdrawal')?.addEventListener('click', function() {
@@ -379,7 +534,7 @@ document.getElementById('cancel-withdrawal')?.addEventListener('click', function
 });
 
 
-// NOWA SEKCJA: Obsługa modalu dodawania nowej definicji raportu
+// Obsługa modalu dodawania nowej definicji raportu
 const addReportDefinitionBtn = document.getElementById('add-report-definition-btn');
 const addReportDefinitionModal = document.getElementById('add-report-definition-modal');
 const submitReportDefinitionBtn = document.getElementById('submit-report-definition');
@@ -389,7 +544,7 @@ const reportDefDescInput = document.getElementById('report-definition-descriptio
 
 if (addReportDefinitionBtn) {
     addReportDefinitionBtn.addEventListener('click', function() {
-        if (currentRole === 'gif') { // Dodatkowe sprawdzenie, choć przycisk jest warunkowo pokazywany
+        if (currentRole === 'gif') {
             reportDefNameInput.value = '';
             reportDefDescInput.value = '';
             addReportDefinitionModal.classList.remove('hidden');
@@ -414,7 +569,7 @@ if (submitReportDefinitionBtn) {
         };
         mockReportDefinitions.push(newReportDef);
 
-        loadReports(); // Odśwież listę raportów w UI
+        loadReports();
         addReportDefinitionModal.classList.add('hidden');
         alert('Definicja raportu została dodana!');
     });
@@ -426,7 +581,7 @@ if (cancelReportDefinitionBtn) {
     });
 }
 
-// Obsługa zamykania modali (ogólna)
+// Obsługa zamykania modali
 document.querySelectorAll('.close').forEach(closeBtn => {
     closeBtn.addEventListener('click', function() {
         this.closest('.modal').classList.add('hidden');
@@ -441,14 +596,28 @@ window.addEventListener('click', function(event) {
     });
 });
 
-
+// Wyszukiwanie w tabeli leków
 document.getElementById('search-leki').addEventListener('input', function() {
-    const searchText = this.value.toLowerCase();
+    const searchText = this.value.toLowerCase().trim();
     const rows = document.querySelectorAll('#medicines-table tbody tr');
+
+    if (rows.length === 1 && rows[0].textContent.includes("Brak danych")) { // Sprawdzenie czy jest tylko wiersz "Brak danych"
+        return;
+    }
+
     rows.forEach(row => {
-        const name = row.children[1].textContent.toLowerCase();
-        const batchNumber = row.children[2].textContent.toLowerCase();
-        if (name.includes(searchText) || batchNumber.includes(searchText)) {
+        // Sprawdzamy, czy wiersz zawiera komórki danych (nie jest to np. wiersz "Brak danych")
+        if (row.cells.length < 3) return; // Minimalna liczba komórek do przeszukania (ID, Nazwa, Numer Serii)
+
+        const idText = row.cells[0].textContent.toLowerCase();
+        const nameText = row.cells[1].textContent.toLowerCase();
+        const batchNumberText = row.cells[2].textContent.toLowerCase();
+        const reasonText = row.cells[4].textContent.toLowerCase(); // Dodano przeszukiwanie po przyczynie
+
+        if (idText.includes(searchText) ||
+            nameText.includes(searchText) ||
+            batchNumberText.includes(searchText) ||
+            reasonText.includes(searchText)) {
             row.style.display = '';
         } else {
             row.style.display = 'none';
@@ -456,3 +625,9 @@ document.getElementById('search-leki').addEventListener('input', function() {
     });
 });
 
+// Początkowe ukrycie panelu głównego, pokazanie logowania
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('main-panel').classList.add('hidden');
+    document.getElementById('login-screen').classList.add('active');
+    document.getElementById('login-screen').classList.remove('hidden');
+});
