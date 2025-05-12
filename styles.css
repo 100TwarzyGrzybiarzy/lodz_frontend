@@ -18,7 +18,6 @@ body {
     display: block;
 }
 
-/* Nagłówek */
 header {
     display: flex;
     justify-content: space-between;
@@ -64,7 +63,6 @@ header {
     font-weight: 500;
 }
 
-/* Formularz logowania */
 .login-form-container {
     display: flex;
     justify-content: center;
@@ -115,7 +113,6 @@ header {
     outline: none;
 }
 
-/* Przyciski */
 .btn-primary {
     background-color: #1e3a5f;
     color: white;
@@ -165,7 +162,6 @@ header {
     text-decoration: underline;
 }
 
-/* Nawigacja główna */
 .main-nav {
     display: flex;
     background-color: #1e3a5f;
@@ -189,14 +185,13 @@ header {
     border-bottom: 3px solid #4caf50;
 }
 
-/* Sekcje panelu */
 .panel-section {
     padding: 2rem;
     display: none;
 }
 
 .panel-section.active {
-    display: block;
+    display: block !important;
 }
 
 .panel-section h2 {
@@ -204,7 +199,6 @@ header {
     margin-bottom: 1.5rem;
 }
 
-/* Wyszukiwarka */
 .search-container {
     display: flex;
     margin-bottom: 1.5rem;
@@ -228,7 +222,6 @@ header {
     cursor: pointer;
 }
 
-/* Tabela */
 .table-container {
     background-color: white;
     border-radius: 8px;
@@ -294,25 +287,27 @@ tbody tr:hover {
     color: #43a047;
 }
 
-/* Modal */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 1rem;
 }
 
 .modal-content {
     background-color: white;
     border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     padding: 2rem;
-    width: 500px;
+    width: auto;
+    min-width: 300px;
     max-width: 90%;
     position: relative;
 }
@@ -337,7 +332,6 @@ tbody tr:hover {
     margin: 0 0.5rem;
 }
 
-/* Powiadomienia */
 .notifications-container,
 .inventory-container,
 .reports-container {
@@ -370,45 +364,17 @@ tbody tr:hover {
     color: #999;
 }
 
-/* Responsywność */
-@media (max-width: 768px) {
-    .main-nav {
-        flex-direction: column;
-    }
-
-    .search-container {
-        flex-direction: column;
-    }
-
-    .form-actions {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .form-actions button {
-        margin: 0;
-    }
-}
-.panel-section.active { /* Upewnij się, że .active nadpisuje .hidden, jeśli oba są obecne */
-    display: block !important;
-}
-
 #add-report-definition-btn {
-    margin-bottom: 1rem; /* Odstęp od listy raportów */
-    width: auto; /* Aby przycisk nie był na całą szerokość, jeśli nie jest to pożądane */
-    padding: 0.7rem 1rem; /* Dopasowanie do innych przycisków akcji */
+    margin-bottom: 1rem;
+    width: auto;
+    padding: 0.7rem 1rem;
 }
 #add-report-definition-btn i {
     margin-right: 0.5rem;
 }
 
-
 .reports-container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 1.5rem;
-    min-height: 200px; /* Zmniejszone, jeśli nie ma wielu raportów */
+    min-height: 200px;
 }
 
 .reports-list {
@@ -417,21 +383,21 @@ tbody tr:hover {
 }
 
 .reports-list li {
-    background-color: #f9f9f9; /* Jaśniejsze tło dla elementu listy */
+    background-color: #f9f9f9;
     border: 1px solid #eee;
     padding: 10px 15px;
     margin-bottom: 8px;
     border-radius: 4px;
-    display: flex; /* Umożliwia wyrównanie linku i przycisku usuwania */
-    justify-content: space-between; /* Rozsuwa elementy na boki */
-    align-items: center; /* Wyśrodkowuje elementy w pionie */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .reports-list li .report-link {
     text-decoration: none;
-    color: #1e3a5f; /* Kolor linku pasujący do motywu */
+    color: #1e3a5f;
     display: block;
-    flex-grow: 1; /* Link zajmuje dostępną przestrzeń */
+    flex-grow: 1;
 }
 
 .reports-list li .report-link:hover {
@@ -468,4 +434,99 @@ tbody tr:hover {
     font-style: italic;
     text-align: center;
     padding: 20px;
+}
+
+#gif-issue-withdrawal-btn {
+    background-color: #e67e22;
+    border-color: #d35400;
+}
+
+#gif-issue-withdrawal-btn:hover {
+    background-color: #d35400;
+}
+
+#gif-withdrawal-form-modal .modal-content.wide {
+    max-width: 650px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+#gif-withdrawal-form-modal .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+
+#gif-withdrawal-form-modal .form-row .form-group {
+    flex: 1;
+    min-width: 250px;
+    margin-bottom: 0;
+}
+
+#gif-withdrawal-form-modal textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+#gif-withdrawal-form-modal small {
+    display: block;
+    margin-top: 4px;
+    color: #666;
+    font-size: 0.8em;
+}
+
+#gif-withdrawal-form-modal .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+#gif-withdrawal-form-modal .form-actions button {
+    flex: 0 1 auto;
+    width: auto;
+    padding: 0.8rem 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .main-nav {
+        flex-direction: column;
+    }
+
+    .search-container {
+        flex-direction: column;
+    }
+
+    .form-actions { /* Ogólne dla wszystkich form-actions */
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-actions button { /* Ogólne dla wszystkich form-actions button */
+        margin: 0; /* Usuń marginesy, jeśli są */
+    }
+
+    #gif-withdrawal-form-modal .form-row { /* Specyficzne dla modala GIF */
+        flex-direction: column; /* Pola jedno pod drugim na małych ekranach */
+        gap: 0; /* Usuń odstęp, bo .form-group ma margin-bottom */
+    }
+    #gif-withdrawal-form-modal .form-row .form-group {
+        margin-bottom: 1rem; /* Dodaj z powrotem margines dolny dla grup w kolumnie */
+        min-width: 100%; /* Pełna szerokość dla pól w kolumnie */
+    }
+
+     #gif-withdrawal-form-modal .form-actions { /* Specyficzne dla modala GIF na małych ekranach */
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    #gif-withdrawal-form-modal .form-actions button {
+         width: 100%; /* Przyciski na całą szerokość */
+    }
+
+    .modal-content {
+        padding: 1.5rem; /* Mniejszy padding dla modali na małych ekranach */
+    }
 }

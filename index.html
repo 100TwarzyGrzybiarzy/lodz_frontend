@@ -22,17 +22,14 @@
         <div class="login-form-container">
             <div class="login-form">
                 <h2>Logowanie do panelu</h2>
-
                 <div class="form-group">
                     <label for="username">Nazwa użytkownika:</label>
                     <input type="text" id="username" placeholder="Wprowadź nazwę użytkownika">
                 </div>
-
                 <div class="form-group">
                     <label for="password">Hasło:</label>
                     <input type="password" id="password" placeholder="Wprowadź hasło">
                 </div>
-
                 <div class="form-group">
                     <label for="role">Rola:</label>
                     <select id="role">
@@ -40,9 +37,9 @@
                         <option value="wytwórnia">Wytwórnia farmaceutyczna</option>
                         <option value="hurtownia">Hurtownia farmaceutyczna</option>
                         <option value="apteka">Apteka</option>
-                        <option value="gif">GIF Inspektor</option> </select>
+                        <option value="gif">GIF Inspektor</option>
+                    </select>
                 </div>
-
                 <button id="login-btn" class="btn-primary">Zaloguj się</button>
             </div>
         </div>
@@ -70,13 +67,12 @@
 
         <section id="wycofane-leki" class="panel-section active">
             <h2>Wycofane leki</h2>
-
             <div class="search-container">
                 <input type="text" id="search-leki" placeholder="Szukaj leku...">
                 <button class="search-btn"><i class="fas fa-search"></i></button>
 
-                <button id="add-withdrawal-btn" class="btn-primary hidden-role" data-visible-for="wytwórnia">
-                    <i class="fas fa-plus"></i> Dodaj wycofanie
+                <button id="gif-issue-withdrawal-btn" class="btn-primary hidden-role" data-visible-for="gif">
+                    <i class="fas fa-gavel"></i> Wycofaj lek
                 </button>
             </div>
 
@@ -84,11 +80,11 @@
                 <table id="medicines-table">
                     <thead>
                         <tr>
-                            <th>ID produktu</th>
+                            <th>ID Decyzji</th>
                             <th>Nazwa leku</th>
                             <th>Numer serii</th>
-                            <th>Data wycofania</th>
-                            <th>Przyczyna wycofania</th>
+                            <th>Data decyzji</th>
+                            <th>Rodzaj decyzji</th>
                             <th>Status</th>
                             <th>Akcje</th>
                         </tr>
@@ -101,14 +97,12 @@
 
         <section id="powiadomienia" class="panel-section">
             <h2>Powiadomienia</h2>
-            <div class="notifications-container">
-                </div>
+            <div class="notifications-container"></div>
         </section>
 
         <section id="moj-inwentarz" class="panel-section">
             <h2>Mój inwentarz</h2>
-            <div class="inventory-container">
-                </div>
+            <div class="inventory-container"></div>
         </section>
 
         <section id="raporty" class="panel-section">
@@ -116,44 +110,15 @@
             <button id="add-report-definition-btn" class="btn-primary hidden-role" data-visible-for="gif">
                 <i class="fas fa-plus"></i> Dodaj nowy raport
             </button>
-            <div class="reports-container">
-                </div>
+            <div class="reports-container"></div>
         </section>
-    </div>
-
-    <div id="add-withdrawal-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Dodaj nowe wycofanie leku</h2>
-
-            <div class="form-group">
-                <label for="product-name">Nazwa leku:</label>
-                <input type="text" id="product-name" required>
-            </div>
-
-            <div class="form-group">
-                <label for="batch-number">Numer serii:</label>
-                <input type="text" id="batch-number" required>
-            </div>
-
-            <div class="form-group">
-                <label for="withdrawal-reason">Przyczyna wycofania:</label>
-                <textarea id="withdrawal-reason" required></textarea>
-            </div>
-
-            <div class="form-actions">
-                <button id="submit-withdrawal" class="btn-primary">Dodaj wycofanie</button>
-                <button id="cancel-withdrawal" class="btn-secondary">Anuluj</button>
-            </div>
-        </div>
     </div>
 
     <div id="medicine-details-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Szczegóły wycofanego leku</h2>
-            <div id="medicine-details-content">
-                </div>
+            <div id="medicine-details-content"></div>
         </div>
     </div>
 
@@ -161,21 +126,91 @@
         <div class="modal-content">
             <span class="close-report-def-modal close">&times;</span>
             <h2>Dodaj nowy raport</h2>
-
             <div class="form-group">
                 <label for="report-definition-name">Nazwa raportu:</label>
                 <input type="text" id="report-definition-name" placeholder="Wprowadź nazwę raportu" required>
             </div>
-
             <div class="form-group">
                 <label for="report-definition-description">Opis:</label>
                 <textarea id="report-definition-description" placeholder="Wprowadź krótki opis raportu"></textarea>
             </div>
-
             <div class="form-actions">
                 <button id="submit-report-definition" class="btn-primary">Dodaj</button>
                 <button id="cancel-report-definition" class="btn-secondary">Anuluj</button>
             </div>
+        </div>
+    </div>
+
+    <div id="gif-withdrawal-form-modal" class="modal hidden">
+        <div class="modal-content wide">
+            <span class="close-gif-modal close">&times;</span>
+            <h2>Wprowadź Dane Wycofania Leku (Decyzja GIF)</h2>
+            <form id="gif-decision-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gif-product-name">Nazwa Produktu Leczniczego:</label>
+                        <input type="text" id="gif-product-name" required>
+                    </div>
+                     <div class="form-group">
+                        <label for="gif-mah">Podmiot Odpowiedzialny:</label>
+                        <input type="text" id="gif-mah" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                     <div class="form-group">
+                        <label for="gif-strength">Moc:</label>
+                        <input type="text" id="gif-strength">
+                    </div>
+                    <div class="form-group">
+                        <label for="gif-form">Postać:</label>
+                        <input type="text" id="gif-form">
+                    </div>
+                </div>
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="gif-decision-type">Rodzaj Decyzji:</label>
+                        <select id="gif-decision-type" required>
+                            <option value="" disabled selected>Wybierz...</option>
+                            <option value="WYCOFANIE_Z_OBROTU">Wycofanie z obrotu</option>
+                            <option value="ZAKAZ_WPROWADZENIA">Zakaz wprowadzenia</option>
+                            <option value="WSTRZYMANIE_W_OBROCIE">Wstrzymanie w obrocie</option>
+                        </select>
+                    </div>
+                     <div class="form-group">
+                        <label for="gif-decision-date">Data Decyzji:</label>
+                        <input type="date" id="gif-decision-date" required>
+                    </div>
+                </div>
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="gif-decision-number">Numer Decyzji:</label>
+                        <input type="text" id="gif-decision-number" placeholder="np. 10/WC/2025" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gif-case-number">Numer Sprawy:</label>
+                        <input type="text" id="gif-case-number" placeholder="np. NJP.5453.1.2025.ABC">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="gif-batches">Serie Produktu (oddzielone przecinkami lub każda w nowej linii):</label>
+                    <textarea id="gif-batches" rows="3" placeholder="np. LOT123, LOT456 lub jedna seria na linię"></textarea>
+                    <small>Pozostaw puste, jeśli dotyczy wszystkich serii.</small>
+                </div>
+                <div class="form-group">
+                    <label for="gif-gtins">Lista GTIN (oddzielone przecinkami lub każda w nowej linii):</label>
+                    <textarea id="gif-gtins" rows="3" placeholder="np. 05909990000000, 05909991111111"></textarea>
+                     <small>Opcjonalne.</small>
+                </div>
+                 <div class="form-group">
+                    <label for="gif-decision-link">Link do pobrania decyzji (PDF):</label>
+                    <input type="url" id="gif-decision-link" placeholder="https://...">
+                    <small>Opcjonalne.</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="submit-gif-decision" class="btn-primary">Zatwierdź Wycofanie</button>
+                    <button type="button" id="cancel-gif-decision" class="btn-secondary">Anuluj</button>
+                </div>
+            </form>
         </div>
     </div>
 
